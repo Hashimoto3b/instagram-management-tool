@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Instagramアカウント統合管理ツール
 
-## Getting Started
+## セットアップ手順
 
-First, run the development server:
-
+### 1. リポジトリをクローン
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Hashimoto3b/instagram-management-tool.git
+cd instagram-management-tool
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. 環境変数ファイルを作成
+`.env.example` をコピーして `.env` を作成し、APIキーを貼り付けてください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`.env` ファイルを開いて、以下の2つのAPIキーを設定します：
 
-## Learn More
+#### Gemini API Key（AI分析・コンテンツ生成）
+1. https://aistudio.google.com/apikey にアクセス
+2. Googleアカウントでログイン → 「APIキーを作成」
+3. 発行されたキーを `.env` の `GEMINI_API_KEY=` に貼り付け
 
-To learn more about Next.js, take a look at the following resources:
+```
+GEMINI_API_KEY="AIzaSy..."  ← ここに貼り付け
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### Instagram アクセストークン（Instagramデータ取得）
+1. https://developers.facebook.com/ にアクセス
+2. アプリを作成 → Instagram Graph APIを有効化
+3. アクセストークンを `.env` の `INSTAGRAM_ACCESS_TOKEN=` に貼り付け
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+INSTAGRAM_ACCESS_TOKEN="EAAxxxxxx..."  ← ここに貼り付け
+```
 
-## Deploy on Vercel
+### 3. データベースの初期化
+```bash
+npx prisma migrate dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. 起動
+```bash
+npm run dev
+```
+→ http://localhost:3000 でアクセス
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 要件定義書
+
+## 1. 概要
+本ツールは、複数のInstagramアカウントを運用するユーザー向けに、競合アカウントのリサーチ、インサイトデータの分析・改善提案、および投稿内容の作成を自動化・支援する統合管理システムです。ユーザーがInstagramアカウントのリンク（またはID）を入力するだけで、運用に必要なデータ収集からコンテンツ生成までを一気通貫で行うことを目的とします。
+
+## 2. ターゲットユーザーと課題
+本ツールの主要なターゲットユーザーは、複数のInstagramアカウントを運用するSNSマーケター、企業の広報担当者、または個人クリエイターです。これらのユーザーは、複数アカウントのインサイトデータを個別に確認・集計する手間や、競合アカウントの動向（投稿頻度、エンゲージメント、コンテンツ傾向など）を手動でリサーチする時間に大きな課題を抱えています。さらに、データに基づいた改善策の立案と、それに沿った新規投稿コンテンツ（画像や動画のアイデア、キャプション等）の企画・作成を効率化することが求められています。
+
+## 3. 主要機能要件
+
+本ツールは、大きく分けて4つの主要機能で構成されます。自社アカウントの現状把握、競合アカウントの分析、データに基づく改善提案、そして実際の投稿コンテンツの生成です。
+
+| 機能カテゴリ | 概要 | 詳細な要件 |
+| :--- | :--- | :--- |
+| **アカウント情報・インサイト取得** | 自社（運用）アカウントの現状を把握するための機能です。 | プロフィール情報（フォロワー数、フォロー数、投稿数など）を取得します。また、過去の投稿（フィード、リール）のリストを取得し、各投稿のエンゲージメントデータ（いいね、コメント、保存、シェア、リーチ数など）を収集してパフォーマンスを定量的に評価します。 |
+| **競合アカウントリサーチ** | 入力された競合アカウントのリンクを元に、競合の動向を分析します。 | 競合アカウントのフォロワー数やプロフィール文を抽出します。さらに、最近の投稿一覧を取得し、どのようなコンテンツ（テーマ、フォーマット）がエンゲージメントを獲得しているかを分析します。 |
+| **データ分析・改善提案** | 取得した自社データと競合データを比較・分析し、AIを活用して具体的な改善策を提示します。 | 自社アカウントの強み・弱みを可視化するパフォーマンスレポートを作成します。競合が成功している要因を抽出し、自社アカウントに足りない要素を特定するギャップ分析を行います。その結果をもとに、「投稿時間の最適化」「ハッシュタグの選定」「ウケるコンテンツフォーマットの採用」など、具体的なネクストアクションを提案します。 |
+| **投稿内容作成（コンテンツ生成）** | 分析結果と改善提案に基づき、実際の投稿用コンテンツを生成・投稿準備を行います。 | 次回の投稿テーマ、構成案、画像や動画のイメージ案を複数提案するコンテンツアイデアの自動生成機能を提供します。ターゲット層に響くキャプションテキストと効果的なハッシュタグを自動生成し、Instagramへの投稿（フィード、ストーリーズ、リール）のドラフトを作成して投稿準備を支援します。 |
+
+## 4. 非機能要件
+システムの使いやすさや性能、安全性に関する要件は以下の通りです。
+
+| 項目 | 要件内容 |
+| :--- | :--- |
+| **操作性 (UI/UX)** | 直感的に操作できるダッシュボード画面を提供し、アカウントURLを入力するだけで一連の処理が開始されるシンプルな導線を実現すること。 |
+| **パフォーマンス** | データ取得から分析レポート・投稿案の生成までを数分以内で完了させること。 |
+| **拡張性** | 将来的な対応プラットフォーム（TikTok, Xなど）の追加や、より高度な画像/動画生成AIの組み込みが容易なアーキテクチャを採用すること。 |
+| **セキュリティ** | Instagram APIの認証情報（OAuth等）を安全に管理し、ユーザーデータへの不正アクセスを防止すること。 |
+
+## 5. 想定されるシステム構成（アーキテクチャ）
+システムは、フロントエンド、バックエンド、データベースの3層構造で構築されることを想定しています。
+
+フロントエンドは、ユーザーがアカウントURLを入力し、レポートや生成された投稿案を確認・編集できるWebアプリケーション（ReactやVue.jsなど）として構築します。バックエンドには、Instagram Graph APIを用いて自社・競合データを取得するAPI連携モジュールと、取得したデータを大規模言語モデル（LLM）に渡して分析レポートや投稿コンテンツを生成するAI分析・生成モジュールを配置します。データベースには、アカウント情報、取得した履歴データ、生成したコンテンツを保存するため、PostgreSQLやMySQLなどを採用します。
+
+## 6. 開発フェーズ（ロードマップ案）
+開発は段階的に進めることを推奨します。
+
+初期の**フェーズ1（PoC・コア機能開発）**では、自社アカウントのインサイト取得と、基本的なAI分析・キャプション生成機能の実装に注力します。続く**フェーズ2（競合分析の統合）**で、競合アカウントのURL入力によるデータ取得と、比較分析機能を追加します。最終的な**フェーズ3（UI/UX強化・自動化）**において、ダッシュボードの構築、レポートの視覚化（グラフ化）、画像生成AIとの連携などを含む投稿作成機能の高度化を行います。
+
+---
+*本書は初期要件をまとめたものであり、実際の開発・APIの仕様（Instagram Graph APIの制限等）に応じて適宜見直すものとします。*
