@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  instagramId       String   @unique
+  username          String
+  name              String?
+  biography         String?
+  followersCount    Int      @default(0)
+  followsCount      Int      @default(0)
+  mediaCount        Int      @default(0)
+  profilePictureUrl String?
+  website           String?
+  isCompetitor      Boolean  @default(false)
+  accessToken       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  posts             Post[]
+  reports           Report[]
+}
+
+model Post {
+  id               String   @id @default(cuid())
+  instagramMediaId String   @unique
+  accountId        String
+  account          Account  @relation(fields: [accountId], references: [id])
+  mediaType        String
+  caption          String?
+  mediaUrl         String?
+  thumbnailUrl     String?
+  permalink        String?
+  timestamp        DateTime
+  likeCount        Int      @default(0)
+  commentsCount    Int      @default(0)
+  reach            Int      @default(0)
+  impressions      Int      @default(0)
+  saved            Int      @default(0)
+  shares           Int      @default(0)
+  engagementRate   Float    @default(0)
+  createdAt        DateTime @default(now())
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id])
+  type      String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model GeneratedContent {
+  id        String   @id @default(cuid())
+  accountId String?
+  theme     String
+  caption   String
+  hashtags  String
+  imageIdea String?
+  status    String   @default("draft")
+  createdAt DateTime @default(now())
+}
